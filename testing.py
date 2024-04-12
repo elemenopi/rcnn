@@ -7,7 +7,7 @@ import constants
 path = constants.path
 annot = constants.annot
 loaded_model = tf.keras.models.load_model("my_model.h5")
-image = cv2.imread(os.path.join(path,"airplane_050.jpg"))
+image = cv2.imread(os.path.join(path,"airplane_700.jpg"))
 cv2.setUseOptimized(True)
 ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
 
@@ -18,7 +18,7 @@ imOut = image.copy()
 boxes = []
 count = 0
 for e,result in enumerate(ssresults):
-    if e<600:
+    if e<2000:
         x,y,w,h = result
         x1 = max(0, x - 10)
         y1 = max(0, y - 10)

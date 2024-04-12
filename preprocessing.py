@@ -189,8 +189,8 @@ for batch_idx in range(num_batches):
                                 continue
                             #data.append({"x1":x,"x2":x+w,"y1":y,"y2":y+h})
                             iou = get_iou(gtval,{"x1":x,"x2":x+w,"y1":y,"y2":y+h})  # calculating IoU for each of the proposed regions
-                            if counter < 25:       # getting only 30 psoitive examples
-                                if iou > 0.75:     # IoU or being positive is 0.8
+                            if counter < 20:       # getting only 30 psoitive examples
+                                if iou > 0.7:     # IoU or being positive is 0.8
                                     x1 = max(0, x - 10)
                                     y1 = max(0, y - 10)
                                     x2 = min(imout.shape[1], x + w + 10)
@@ -203,8 +203,8 @@ for batch_idx in range(num_batches):
                                     counter += 1
                             else :
                                 fflag =1              # to insure we have collected all psotive examples
-                            if falsecounter <25:      # 30 negatve examples are allowed only
-                                if iou < 0.25:         # IoU or being negative is 0.3
+                            if falsecounter <20:      # 30 negatve examples are allowed only
+                                if iou < 0.3:         # IoU or being negative is 0.3
                                     x1 = max(0, x - 10)
                                     y1 = max(0, y - 10)
                                     x2 = min(imout.shape[1], x + w + 10)
