@@ -182,7 +182,7 @@ for batch_idx in range(num_batches):
                 bflag = 0
                 data = []
                 for k,result in enumerate(ssresults):
-                    if k < 2000 and flag == 0:     # till 2000 to get top 2000 regions only
+                    if k < 400 and flag == 0:     # till 2000 to get top 2000 regions only
                         for gtval in gtvalues:
                             x,y,w,h = result
                             if (w<30 and h<30):

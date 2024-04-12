@@ -1,8 +1,8 @@
-import tensorflow as tf
+#import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import os,cv2,keras
+import os,cv2#,keras
 import constants
 import torch
 import torch.nn as nn
@@ -12,18 +12,20 @@ import torch.optim as optim
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from custom_dataset import CustomDataset
-
+import sys
+from PIL import Image
 cv2.setUseOptimized(True)
 ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
 path = constants.path
 annot = constants.annot
 # Load all batches of data
-X_batches = [np.load(f"preprocessing_results/X_new_{i}.npy") for i in range(1, 4)]
-Y_batches = [np.load(f"preprocessing_results/Y_new_{i}.npy") for i in range(1, 4)]
+X_batches = [np.load(f"preprocessing_results/X_new_{i}.npy") for i in range(0, 1)]
+Y_batches = [np.load(f"preprocessing_results/Y_new_{i}.npy") for i in range(0, 1)]
 
 # Concatenate the batches along the first axis
 X_new = np.concatenate(X_batches, axis=0)
 Y_new = np.concatenate(Y_batches, axis=0)
+
 num_images = 25
 count = 0
 one_labels = []
@@ -32,11 +34,69 @@ for i in range(len(Y_new)):
         one_labels.append(i)
 #pytorch 
 transform = transforms.Compose([
-    transforms.Resize((224,224)),
     transforms.ToTensor(),
+    # Transpose the image to (channels, height, width) before normalization
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
-custom_dataset = CustomDataset(X_new,Y_new),transform = transform)
+
+custom_dataset = CustomDataset(X_new,Y_new,transform = transform)
+train_loader = DataLoader(custom_dataset,batch_size=200,shuffle = True)
+for images,labels in train_loader:
+    print(images.shape)
+    image = images[20].permute(1, 2, 0).numpy()
+    plt.imshow(image)
+    plt.show()
+    break
+# Define MobileNetV3 model
+model = models.mobilenet_v3_small(pretrained=True)
+num_ftrs = model.classifier[3].in_features
+model.classifier[3] = nn.Linear(num_ftrs, 1)
+
+# Define loss function and optimizer
+criterion = nn.BCEWithLogitsLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+#mobilenetv3.train()
+
+num_epochs = 2
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
+for epoch in range(num_epochs):
+    model.train()
+    running_loss = 0.0
+    for inputs, labels in train_loader:
+        inputs, labels = inputs.to(device), labels.to(device)
+        
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = criterion(outputs.squeeze(), labels.float())
+        loss.backward()
+        optimizer.step()
+
+        running_loss += loss.item() * inputs.size(0)
+    
+    epoch_loss = running_loss / len(train_loader.dataset)
+    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}")
+
+torch.save(model.state_dict(),'mobilenetv3_torch.pth')
+#num_epochs = 4
+#for epoch in range(num_epochs):
+#    running_loss = 0.0
+#    for inputs, labels in train_loader:
+#        optimizer.zero_grad()
+#        outputs = mobilenetv3(inputs)
+#        loss = criterion(outputs,labels)
+#        loss.backward()
+#        optimizer.step()
+#        running_loss +=loss.item() * inputs.size(0)
+#    epoch_loss = running_loss/len(custom_dataset)
+#    print(f"Epoch {epoch+1}/{num_epochs} LOSS:{epoch_loss}")
+#
+#
+#torch.save(mobilenetv3.state_dict(),'mobilenetv3_torch.pth')
+#
+
+
 
 
 
